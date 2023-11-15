@@ -2,6 +2,7 @@
 
 ## Deskripsi
 <p>Transmitter data untuk sensor Accelerometer RION <i>AKF-394-02-68</i></p>
+
 ## Spesifikasi Hardware
 - CPU: ESP32-WROOM 32
 - Sensor Accelerometer: RION AKF-394
