@@ -26,6 +26,15 @@ void setup()
       0);
   vTaskDelay(1000 / portTICK_PERIOD_MS);
   xTaskCreatePinnedToCore(
+      actButton,
+      "action button",
+      2048,
+      NULL,
+      5,
+      &BUTTON_TASK,
+      0);
+  vTaskDelay(1000 / portTICK_PERIOD_MS);
+  xTaskCreatePinnedToCore(
       hardwareStatus,
       "hardware status",
       2048,

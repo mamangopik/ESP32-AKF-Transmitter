@@ -175,10 +175,39 @@ void hardwareStatus(void *arguments)
     payload += "\t\t\"battery_voltage\":" + String(v_batt) + ",\n";
     payload += "\t\t\"RSSI\":" + String(WiFi.RSSI()) + ",\n";
     payload += "\t\t\"free_memory\":" + String(esp_get_free_heap_size()) + ",\n";
+    payload += "\t\t\"node_qos\":" + String(QoS) + ",\n";
     payload += "\t\t\"led_status\":" + String(led_status_mode) + "\n";
     payload += "\t}\n";
     payload += "}";
     Serial.println(payload);
     vTaskDelay(1000 / portTICK_PERIOD_MS);
+  }
+}
+
+void actButton(void *pvParameters)
+{
+  pinMode(ACTBUTTONPIN, INPUT_PULLUP);
+  uint8_t last_state = 1;
+  while (1)
+  {
+    if (ACTBUTTONPIN_PRESS && last_state == 1)
+    {
+      vTaskDelay(50 / portTICK_PERIOD_MS);
+      last_state = !last_state;
+    }
+    if (ACTBUTTONPIN_RELEASE && last_state == 0)
+    {
+      vTaskDelay(50 / portTICK_PERIOD_MS);
+      if (QoS < 2)
+      {
+        QoS++;
+      }
+      else
+      {
+        QoS = 0;
+      }
+      last_state = !last_state;
+    }
+    vTaskDelay(5 / portTICK_PERIOD_MS);
   }
 }

@@ -22,8 +22,12 @@
 #define MSTR4 500
 
 #define LEDSTATUSPIN 4
+#define ACTBUTTONPIN 21
 #define VSENSE_PIN 33
-#define QoS 2
+
+
+#define ACTBUTTONPIN_PRESS digitalRead(ACTBUTTONPIN)==0
+#define ACTBUTTONPIN_RELEASE digitalRead(ACTBUTTONPIN)==1
 
 #define DISCONNECTED 0
 #define CONNECTED 1
@@ -41,6 +45,7 @@ TaskHandle_t LED_TASK;
 TaskHandle_t SERIAL_TASK;
 TaskHandle_t BATTERY_TASK;
 TaskHandle_t HWINFO_TASK;
+TaskHandle_t BUTTON_TASK;
 
 WiFiClient net;
 MQTTClient client(512,512);
@@ -52,6 +57,7 @@ uint8_t command[14];
 uint8_t header[4];
 uint8_t checksum[1];
 uint8_t led_status_mode = DISCONNECTED;
+uint8_t QoS = 2;
 unsigned int buffer_mon = 0;
 
 String msg_in = "";
