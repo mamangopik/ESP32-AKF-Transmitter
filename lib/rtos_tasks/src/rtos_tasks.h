@@ -8,19 +8,15 @@ void mqttSender(void *arguments)
   char buf_broker[100];
   broker.toCharArray(buf_broker, broker.length() + 1);
   String topic = readString(MSTR3);
-  client.setTimeout(7000);
+  client.setTimeout(10000);
   client.begin(buf_broker, net);
   while (1)
   {
-
     client.loop();
 
     if (!client.connected())
     {
       connect();
-      Serial.println("=====================================");
-      Serial.println("BERHASIL KONEKKKK");
-      Serial.println("=====================================");
     }
 
     if (WiFi.status() == WL_DISCONNECTED)
@@ -36,9 +32,10 @@ void mqttSender(void *arguments)
       {
         publishBuffer(i);
         buffer_ready[i] = 0;
+        vTaskDelay(1 / portTICK_PERIOD_MS);
       }
     }
-    vTaskDelay(1 / portTICK_PERIOD_MS);
+    vTaskDelay(5 / portTICK_PERIOD_MS);
   }
 }
 
@@ -46,6 +43,7 @@ void serialHandler(void *arguments)
 {
   while (1)
   {
+    // Serial.println("loop serial handler");
     while (Serial.available() > 1)
     {
       no_serial_in_wdg = millis();
@@ -75,6 +73,7 @@ void sensorReader(void *pvParameters)
   setAutorate();
   for (;;)
   {
+    // Serial.println("loop sensor");
     cekSensor();
     while (Serial2.available() > 0)
     {
@@ -104,6 +103,7 @@ void ledStatus(void *arguments)
   pinMode(LEDSTATUSPIN, OUTPUT);
   while (1)
   {
+    // Serial.println("loop LED");
     switch (led_status_mode)
     {
     case CONNECTED:
@@ -136,7 +136,7 @@ void ledStatus(void *arguments)
     default:
       LED_STATUS_RESET;
     }
-    vTaskDelay(10 / portTICK_PERIOD_MS);
+    vTaskDelay(100 / portTICK_PERIOD_MS);
   }
 }
 
@@ -149,6 +149,7 @@ void batteryStatus(void *arguments)
   byte i = 0;
   while (1)
   {
+    // Serial.println("loop BATTERY");
     float mv = analogReadMilliVolts(VSENSE_PIN);
     mv = mv / 4700 * (4700 + 10000);
     sum += (mv / 1000);
@@ -158,17 +159,6 @@ void batteryStatus(void *arguments)
       v_batt = sum / 100.0;
       i = 0;
       sum = 0;
-      if (v_batt < 3.0)
-      {
-        // if battery voltage below 3.0 Volts
-        led_status_mode = LOWBATT;
-      }
-      // if battery got charged
-      if (led_status_mode == LOWBATT && v_batt >= 3.0)
-      {
-        Serial.println("{\"INFO\":\"SW reset\"}");
-        ESP.restart();
-      }
     }
     vTaskDelay(10 / portTICK_PERIOD_MS);
   }
@@ -178,6 +168,7 @@ void hardwareStatus(void *arguments)
 {
   while (1)
   {
+    // Serial.println("loop BATTERY");
     String payload = "";
     payload += "{";
     payload += "\"hardware_info\":{\n";
@@ -188,6 +179,6 @@ void hardwareStatus(void *arguments)
     payload += "\t}\n";
     payload += "}";
     Serial.println(payload);
-    vTaskDelay(5000 / portTICK_PERIOD_MS);
+    vTaskDelay(1000 / portTICK_PERIOD_MS);
   }
 }

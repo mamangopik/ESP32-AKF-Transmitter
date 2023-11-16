@@ -78,23 +78,17 @@ void processCommand()
   }
   if (data_count == DATA_SIZE)
   {
-    Serial.print("before: ");
-    Serial.println(buffer_mon);
-
     buffer_ready[buffer_mon] = 1;
     buffer_mon++;
+    id_data++;             // increment packet ID
     if (buffer_mon == BANK_SIZE)
     {
       buffer_mon = 0;
     }
-    Serial.print("after: ");
-    Serial.println(buffer_mon);
-
     data_count = 0; // Reset arrays
     unsigned long duration = millis() - start_time;
     String timedata = String(duration);
     start_time = millis(); // Start new time measurement
-    id_data++;             // increment packet ID
   }
 }
 

@@ -40,9 +40,10 @@ TaskHandle_t MQTT_TASK;
 TaskHandle_t LED_TASK;
 TaskHandle_t SERIAL_TASK;
 TaskHandle_t BATTERY_TASK;
+TaskHandle_t HWINFO_TASK;
 
 WiFiClient net;
-MQTTClient client(256);
+MQTTClient client(512,512);
 
 // global variables
 uint8_t counter = 0;
@@ -57,8 +58,8 @@ String msg_in = "";
 String sensor_topic = "";
 String raw = "";
 
-const int DATA_SIZE = 256;
-const int BANK_SIZE = 50;
+const int DATA_SIZE = 512;
+const int BANK_SIZE = 25;
 
 short x_values[BANK_SIZE][DATA_SIZE];
 short y_values[BANK_SIZE][DATA_SIZE];

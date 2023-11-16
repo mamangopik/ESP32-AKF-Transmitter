@@ -15,7 +15,7 @@ void setup()
       2,
       &BATTERY_TASK,
       1);
-
+  vTaskDelay(1000 / portTICK_PERIOD_MS);
   xTaskCreatePinnedToCore(
       ledStatus,
       "led status",
@@ -24,15 +24,16 @@ void setup()
       3,
       &LED_TASK,
       0);
+  vTaskDelay(1000 / portTICK_PERIOD_MS);
   xTaskCreatePinnedToCore(
       hardwareStatus,
       "hardware status",
       2048,
       NULL,
       4,
-      NULL,
+      &HWINFO_TASK,
       1);
-
+  vTaskDelay(1000 / portTICK_PERIOD_MS);
   xTaskCreatePinnedToCore(
       serialHandler,    /* Task function. */
       "serial handler", /* name of task. */
@@ -41,7 +42,7 @@ void setup()
       1,                /* priority of the task */
       &SERIAL_TASK,     /* Task handle to keep track of created task */
       0);               /* pin task to core 1 */
-
+  vTaskDelay(1000 / portTICK_PERIOD_MS);
   xTaskCreatePinnedToCore(
       sensorReader,
       "sensor reader",
@@ -50,9 +51,9 @@ void setup()
       1,
       &SENSOR_TASK,
       0);
-
+  vTaskDelay(1000 / portTICK_PERIOD_MS);
   initWifi();
-
+  vTaskDelay(1000 / portTICK_PERIOD_MS);
   xTaskCreatePinnedToCore(
       mqttSender,
       "mqtt sender",
