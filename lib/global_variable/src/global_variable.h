@@ -1,7 +1,7 @@
-//if define __global_variable__ is not defined
-#ifndef __global_variable__ 
-//define __global_variable__ to indicate module already called and prevend redefinition of global variables
-#define __global_variable__ 
+// if define __global_variable__ is not defined
+#ifndef __global_variable__
+// define __global_variable__ to indicate module already called and prevend redefinition of global variables
+#define __global_variable__
 
 #include <Arduino.h>
 #include <EEPROM.h>
@@ -24,20 +24,33 @@
 #define LEDSTATUSPIN 4
 #define VSENSE_PIN 33
 #define QoS 2
-// global objects 
+
+#define DISCONNECTED 0
+#define CONNECTED 1
+#define LOWBATT 2
+#define CONNECTING_WIFI 3
+
+#define LED_STATUS_SET digitalWrite(LEDSTATUSPIN, 1)
+#define LED_STATUS_RESET digitalWrite(LEDSTATUSPIN, 0)
+#define LED_STATUS_TOGGLE digitalWrite(LEDSTATUSPIN, !digitalRead(LEDSTATUSPIN))
+
+// global objects
 TaskHandle_t SENSOR_TASK;
 TaskHandle_t MQTT_TASK;
 TaskHandle_t LED_TASK;
 TaskHandle_t SERIAL_TASK;
+TaskHandle_t BATTERY_TASK;
+
 WiFiClient net;
 MQTTClient client(256);
 
-// global variables 
+// global variables
 uint8_t counter = 0;
 uint8_t found = 0;
 uint8_t command[14];
 uint8_t header[4];
 uint8_t checksum[1];
+uint8_t led_status_mode = DISCONNECTED;
 unsigned int buffer_mon = 0;
 
 String msg_in = "";
@@ -54,7 +67,7 @@ short z_values[BANK_SIZE][DATA_SIZE];
 int data_count = 0;
 int last_ts = 0;
 
-uint8_t buffer_ready[BANK_SIZE]={0};
+uint8_t buffer_ready[BANK_SIZE] = {0};
 
 unsigned long start_time = 0;
 unsigned long wlan_timer = 0;
@@ -72,14 +85,14 @@ String JSONtopic;
 String JSONbroker;
 
 // Function declarations
-
-//RTOS tasks
+// RTOS tasks
 void mqttSender(void *arguments);
 void serialHandler(void *arguments);
 void ledStatus(void *arguments);
-void sensorReader( void * pvParameters );
+void sensorReader(void *pvParameters);
 
 // WiFi and MQTT-related functions
+void initWifi();
 void connect();
 void publishBuffer(uint8_t buffer_loc);
 
@@ -92,7 +105,7 @@ void processCommand();
 int createXRaw(uint8_t command[]);
 int createYRaw(uint8_t command[]);
 int createZRaw(uint8_t command[]);
-int calculateValue(uint8_t  nibbles[]);
+int calculateValue(uint8_t nibbles[]);
 unsigned char calculateChecksum(unsigned char command[], unsigned char length);
 
 // EEPROM data read/write functions
