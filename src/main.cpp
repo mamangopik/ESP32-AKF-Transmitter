@@ -10,7 +10,7 @@ void setup()
   xTaskCreatePinnedToCore(
       batteryStatus,
       "battery status",
-      2048,
+      4096,
       NULL,
       2,
       &BATTERY_TASK,

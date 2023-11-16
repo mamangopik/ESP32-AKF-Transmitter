@@ -154,13 +154,13 @@ void batteryStatus(void *arguments)
     mv = mv / 4700 * (4700 + 10000);
     sum += (mv / 1000);
     i++;
-    if (i == 100)
+    if (i == 5000)
     {
-      v_batt = sum / 100.0;
+      v_batt = sum / 5000.0;
       i = 0;
       sum = 0;
     }
-    vTaskDelay(10 / portTICK_PERIOD_MS);
+    vTaskDelay(5 / portTICK_PERIOD_MS);
   }
 }
 
