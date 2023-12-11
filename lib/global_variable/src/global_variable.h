@@ -12,8 +12,21 @@
 #include "soc/rtc_cntl_reg.h"
 
 // user typedef
+
+// #define USING_PSRAM
+
+#ifndef USING_PSRAM
+
+
 #define RXD2 16
 #define TXD2 17
+#endif
+
+#ifdef USING_PSRAM
+#define RXD2 21
+#define TXD2 22
+#endif
+
 #define EEPROM_SIZE 1024
 #define MSTR0 100
 #define MSTR1 200
