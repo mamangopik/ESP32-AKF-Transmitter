@@ -10,6 +10,7 @@ void mqttSender(void *arguments)
   String topic = readString(MSTR3);
   client.setTimeout(10000);
   client.begin(buf_broker, net);
+  // client.begin("broker.hivemq.com", net);
   while (1)
   {
     client.loop();
@@ -23,7 +24,9 @@ void mqttSender(void *arguments)
     {
       Serial.println("{\"ERR\":\"WiFi Error\"}");
       vTaskDelay(5000 / portTICK_PERIOD_MS);
+#ifdef WiFi_WDG
       ESP.restart();
+#endif
     }
 
     for (uint8_t i = 0; i < BANK_SIZE; i++)
@@ -70,7 +73,8 @@ void sensorReader(void *pvParameters)
   last_ts = 0;
   Serial2.begin(9600, SERIAL_8N1, RXD2, TXD2);
   sensor_wdg = millis();
-  setAutorate();
+  setAutorate(AKF_200_HZ);
+  vTaskDelay(1000);
   for (;;)
   {
     // Serial.println("loop sensor");

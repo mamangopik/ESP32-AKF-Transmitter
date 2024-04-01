@@ -6,14 +6,16 @@ void cekSensor()
   {
     Serial.println("{\"ERR\":\"sensor not responding, trying to recall\"}");
     vTaskDelay(5000 / portTICK_PERIOD_MS);
+#ifdef SENSOR_WDG
     ESP.restart();
+#endif
   }
 }
-void setAutorate()
+void setAutorate(uint8_t data_rate)
 {
-  delay(500);
+  vTaskDelay(500 / portTICK_PERIOD_MS);
   Serial2.updateBaudRate(9600);
-  delay(500);
+  vTaskDelay(500 / portTICK_PERIOD_MS);
   byte command_changebaud[6] = {0x68, 0x05, 0x00, 0x0b, 0x05, 0xff};
   command_changebaud[5] = calculateChecksum(command_changebaud, 5);
   for (byte i = 0; i < 6; i++)
@@ -23,7 +25,33 @@ void setAutorate()
   vTaskDelay(500 / portTICK_PERIOD_MS);
   Serial2.updateBaudRate(115200);
   vTaskDelay(500 / portTICK_PERIOD_MS);
-  byte command_autorate[6] = {0x68, 0x05, 0x00, 0x0c, 0x06, 0xff};
+
+  byte command_autorate[6] = {0x68, 0x05, 0x00, 0x0c, 0xff, 0xff};
+
+  switch (data_rate)
+  {
+  case AKF_5_HZ:
+    command_autorate[4] = 0x01;
+    break;
+  case AKF_10_HZ:
+    command_autorate[4] = 0x02;
+    break;
+  case AKF_25_HZ:
+    command_autorate[4] = 0x03;
+    break;
+  case AKF_50_HZ:
+    command_autorate[4] = 0x04;
+    break;
+  case AKF_100_HZ:
+    command_autorate[4] = 0x05;
+    break;
+  case AKF_200_HZ:
+    command_autorate[4] = 0x06;
+    break;
+  case AKF_500_HZ:
+    command_autorate[4] = 0x07;
+    break;
+  }
   command_autorate[5] = calculateChecksum(command_autorate, 5);
   for (byte i = 0; i < 6; i++)
   {
@@ -80,7 +108,10 @@ void processCommand()
   {
     buffer_ready[buffer_mon] = 1;
     buffer_mon++;
-    id_data++;             // increment packet ID
+    if (id_data < 0xffffffff)
+      id_data++; // increment packet ID
+    else
+      id_data = 0;
     if (buffer_mon == BANK_SIZE)
     {
       buffer_mon = 0;

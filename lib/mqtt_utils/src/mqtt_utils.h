@@ -5,13 +5,12 @@ void connect()
   String channel = String(WiFi.macAddress());
   Serial.print("\nconnecting...");
   connection_counter++;
-  while (!client.connect(channel.c_str(), "public", "public"))
+  if (client.connect(channel.c_str(), "public", "public"))
   {
-    Serial.print(".");
-    vTaskDelay(10 / portTICK_PERIOD_MS);
+    led_status_mode = CONNECTED;
+    Serial.println("\nconnected!");
   }
-  led_status_mode = CONNECTED;
-  Serial.println("\nconnected!");
+  vTaskDelay(10 / portTICK_PERIOD_MS);
 }
 
 void publishBuffer(byte buffer_loc)
@@ -57,6 +56,7 @@ void publishBuffer(byte buffer_loc)
   json_data += ",\"signal_strength\":" + String(WiFi.RSSI());
   json_data += ",\"id_data\":" + String(id_data);
   json_data += ",\"connection_lost\":" + String(connection_counter);
+  json_data += ",\"sampling_frequency\":" + String(freq_sampling);
   json_data += "}";
 
   sensor_topic.trim();
@@ -70,5 +70,28 @@ void publishBuffer(byte buffer_loc)
   else
   {
     Serial.println("{\"ERR\":\"Message doesn't sent\"}");
+    log_to_sd(json_data);
+  }
+}
+
+void log_to_sd(String data)
+{
+  if (sd_attached == 1 && sd_configured == 1)
+  {
+    fs::FS &fs = SD_MMC;
+    // Path where new picture will be saved in SD Card
+    String path = "/BRAINS_LOG_" + String(99) + ".csv";
+    File file = fs.open(path.c_str(), FILE_APPEND);
+    if (!file)
+    {
+      Serial.println("Failed to open file in writing mode");
+    }
+    else
+    {
+      String buffer = String("12/12/2024;" + data + "\n");
+      file.print(buffer.c_str());
+    }
+    file.close();
+    Serial.println("{\"SUCCESS\":\"Data Logged to SD Card\"}");
   }
 }
