@@ -18,21 +18,26 @@
 #define USING_LED_STATUS
 #define SENSOR_WDG
 #define WiFi_WDG
-#define freq_sampling 50
-
-#ifdef USING_PSRAM
-#define RXD2 26
-#define TXD2 27
-#endif
+#define board_v2
 
 #ifdef USING_MICRO_SD
 #include "FS.h"
 #include "SD_MMC.h"
 #endif
 
-#ifndef USING_PSRAM
+#if !defined USING_PSRAM && defined board_v1
 #define RXD2 16
 #define TXD2 17
+#endif
+
+#if !defined USING_PSRAM && defined board_v2
+#define RXD2 26
+#define TXD2 27
+#endif
+
+#if defined USING_PSRAM
+#define RXD2 26
+#define TXD2 27
 #endif
 
 #define EEPROM_SIZE 1024
@@ -88,36 +93,41 @@ uint8_t led_status_mode = DISCONNECTED;
 uint8_t QoS = 2;
 uint8_t sd_attached = 0;
 uint8_t sd_configured = 0;
-int buffer_mon = 0;
+uint8_t psram_ready = 0;
+
+uint16_t freq_sampling = 50;
+
+uint32_t buffer_mon = 0;
 
 String msg_in = "";
 String sensor_topic = "";
 String raw = "";
 
-// without PSRAM
-#ifndef USING_PSRAM
-const int DATA_SIZE = 64;
-const int BANK_SIZE = 200;
+const int DATA_SIZE = 128;
+const int BANK_SIZE = 100;
 short x_values[BANK_SIZE][DATA_SIZE];
 short y_values[BANK_SIZE][DATA_SIZE];
 short z_values[BANK_SIZE][DATA_SIZE];
-#endif
-
-// PSRAM available
-// #ifdef USING_PSRAM
-// const int DATA_SIZE = 256;
-// const int BANK_SIZE = 100;
-// short **x_values;
-// short **y_values;
-// short **z_values;
-// #endif
 
 #ifdef USING_PSRAM
-const int DATA_SIZE = 64;
-const int BANK_SIZE = 200;
-short x_values[BANK_SIZE][DATA_SIZE];
-short y_values[BANK_SIZE][DATA_SIZE];
-short z_values[BANK_SIZE][DATA_SIZE];
+const uint32_t psram_bank_size = 5250;
+const uint32_t psram_packet_size = DATA_SIZE;
+
+uint32_t psram_buff_loc = 0;
+
+short *spi_ram_x;
+short *spi_ram_y;
+short *spi_ram_z;
+
+void psram_begin();
+void write_x(uint16_t row, uint16_t col, int data);
+void write_y(uint16_t row, uint16_t col, int data);
+void write_z(uint16_t row, uint16_t col, int data);
+short read_x(uint16_t row, uint16_t col);
+short read_y(uint16_t row, uint16_t col);
+short read_z(uint16_t row, uint16_t col);
+
+#include <psram_utils.h>
 #endif
 
 int data_count = 0;
@@ -150,8 +160,9 @@ void sensorReader(void *pvParameters);
 // WiFi and MQTT-related functions
 void initWifi();
 void connect();
-void publishBuffer(uint8_t buffer_loc);
+void publishBuffer(uint32_t buffer_loc);
 void log_to_sd(String data);
+String jsonify(uint32_t buffer_loc);
 
 // Sensor and hardware control functions
 void cekSensor();

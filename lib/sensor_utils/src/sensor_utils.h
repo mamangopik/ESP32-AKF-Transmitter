@@ -32,24 +32,31 @@ void setAutorate(uint8_t data_rate)
   {
   case AKF_5_HZ:
     command_autorate[4] = 0x01;
+    freq_sampling = 5;
     break;
   case AKF_10_HZ:
     command_autorate[4] = 0x02;
+    freq_sampling = 10;
     break;
   case AKF_25_HZ:
     command_autorate[4] = 0x03;
+    freq_sampling = 25;
     break;
   case AKF_50_HZ:
     command_autorate[4] = 0x04;
+    freq_sampling = 50;
     break;
   case AKF_100_HZ:
     command_autorate[4] = 0x05;
+    freq_sampling = 100;
     break;
   case AKF_200_HZ:
     command_autorate[4] = 0x06;
+    freq_sampling = 200;
     break;
   case AKF_500_HZ:
     command_autorate[4] = 0x07;
+    freq_sampling = 500;
     break;
   }
   command_autorate[5] = calculateChecksum(command_autorate, 5);

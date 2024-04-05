@@ -8,7 +8,7 @@ void mqttSender(void *arguments)
   char buf_broker[100];
   broker.toCharArray(buf_broker, broker.length() + 1);
   String topic = readString(MSTR3);
-  client.setTimeout(10000);
+  client.setTimeout(3000);
   client.begin(buf_broker, net);
   // client.begin("broker.hivemq.com", net);
   while (1)
@@ -29,7 +29,7 @@ void mqttSender(void *arguments)
 #endif
     }
 
-    for (uint8_t i = 0; i < BANK_SIZE; i++)
+    for (uint32_t i = 0; i < BANK_SIZE; i++)
     {
       if (buffer_ready[i] == 1 && client.connected())
       {
@@ -73,7 +73,7 @@ void sensorReader(void *pvParameters)
   last_ts = 0;
   Serial2.begin(9600, SERIAL_8N1, RXD2, TXD2);
   sensor_wdg = millis();
-  setAutorate(AKF_200_HZ);
+  setAutorate(AKF_500_HZ);
   vTaskDelay(1000);
   for (;;)
   {

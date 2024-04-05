@@ -6,6 +6,9 @@ void setup()
     EEPROM.begin(EEPROM_SIZE);
     Serial.begin(115200);
 
+#if defined USING_PSRAM
+    psram_begin();
+#endif
 #ifdef USING_MICRO_SD
     if (!SD_MMC.begin())
     {
@@ -46,7 +49,7 @@ void setup()
     vTaskDelay(1000 / portTICK_PERIOD_MS);
     initWifi();
     vTaskDelay(1000 / portTICK_PERIOD_MS);
-    xTaskCreatePinnedToCore(mqttSender, "mqtt sender", 4096, NULL, 7, &MQTT_TASK, 1);
+    xTaskCreatePinnedToCore(mqttSender, "mqtt sender", 8192, NULL, 7, &MQTT_TASK, 1);
 }
 
 void loop()
