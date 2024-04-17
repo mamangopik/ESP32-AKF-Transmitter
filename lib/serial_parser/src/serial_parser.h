@@ -1,26 +1,35 @@
 #include <global_variable.h>
 
-void parseSerial() {
-  if (msg_in.length() > 0) {
+void parseSerial()
+{
+  if (msg_in.length() > 0)
+  {
     String command = "";
     String cmd_value = "";
-    for (byte i = 0; i < msg_in.length(); i++) {
+    for (byte i = 0; i < msg_in.length(); i++)
+    {
       command += msg_in[i];
-      if (msg_in[i] == ':') {
+      if (msg_in[i] == ':')
+      {
         break;
       }
     }
     byte get_cmd = 0;
-    for (byte i = 0; i < (msg_in.length()); i++) {
-      if (get_cmd == 1) {
+    for (byte i = 0; i < (msg_in.length()); i++)
+    {
+      if (get_cmd == 1)
+      {
         cmd_value += msg_in[i];
       }
-      if (msg_in[i] == ':') {
+      if (msg_in[i] == ':')
+      {
         get_cmd = 1;
       }
     }
-    if (command == ">setdata:") {
-      if (cmd_value.length() > 0) {
+    if (command == ">setdata:")
+    {
+      if (cmd_value.length() > 0)
+      {
         parseJsonData(cmd_value);
         // Extract individual keys
         writeString(MSTR0, JSONssid);
@@ -31,10 +40,24 @@ void parseSerial() {
         ESP.restart();
       }
     }
-    else if (command == ">reboot:") {
+    else if (command == ">settime:")
+    {
+      parseTimeData(cmd_value);
+      // January 21, 2014 at 3am you would call:
+      rtc.adjust(
+          DateTime(JSONyear.toInt(),
+                   JSONmonth.toInt(),
+                   JSONday.toInt(),
+                   JSONhour.toInt(),
+                   JSONminute.toInt(),
+                   JSONsecond.toInt()));
+    }
+    else if (command == ">reboot:")
+    {
       ESP.restart();
     }
-    else if (command == ">getVAR:") {
+    else if (command == ">getVAR:")
+    {
       String jsonResponse = "{\n";
       jsonResponse += "  \"setup_var\": {\n";
       jsonResponse += "    \"SSID\":\"" + readString(MSTR0) + "\",\n";
@@ -47,7 +70,8 @@ void parseSerial() {
       // Send the JSON response over Serial
       Serial.println(jsonResponse);
     }
-    else {
+    else
+    {
       Serial.println("ERROR");
     }
   }

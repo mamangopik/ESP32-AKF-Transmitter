@@ -27,29 +27,16 @@ void publishBuffer(uint32_t buffer_loc)
   }
   else
   {
-    Serial.println("{\"ERR\":\"Message doesn't sent\"}");
+    Serial.println("{\"WARN\":\"Message doesn't sent\"}");
     log_to_sd(payload);
   }
 }
 
 void log_to_sd(String data)
 {
-  if (sd_attached == 1 && sd_configured == 1)
+  String path = "/BRAINS_LOG_" + String(99) + ".csv";
+  if (sd_append_log(path, data))
   {
-    fs::FS &fs = SD_MMC;
-    // Path where new picture will be saved in SD Card
-    String path = "/BRAINS_LOG_" + String(99) + ".csv";
-    File file = fs.open(path.c_str(), FILE_APPEND);
-    if (!file)
-    {
-      Serial.println("Failed to open file in writing mode");
-    }
-    else
-    {
-      String buffer = String("12/12/2024;" + data + "\n");
-      file.print(buffer.c_str());
-    }
-    file.close();
     Serial.println("{\"SUCCESS\":\"Data Logged to SD Card\"}");
   }
   else
@@ -60,12 +47,14 @@ void log_to_sd(String data)
 
 String jsonify(uint32_t buffer_loc)
 {
+  uint32_t id = 0;
   int rawValue = analogRead(VSENSE_PIN);
   v_batt = 0.4 + (3.3 / 4095.0) * rawValue * ((10000 + 10000) / 10000);
 
   String json_data = "{";
 
 #if !defined USING_PSRAM
+  id = buffer_loc;
   json_data += "\"x_values\":[";
   for (int i = 0; i < DATA_SIZE; i++)
   {
@@ -134,6 +123,8 @@ String jsonify(uint32_t buffer_loc)
       }
     }
 
+    id = psram_buff_loc;
+
     // address rolling mechanism for SPI RAM or PSRAM
     psram_buff_loc++;
     if (psram_buff_loc == psram_bank_size)
@@ -141,8 +132,9 @@ String jsonify(uint32_t buffer_loc)
       psram_buff_loc = 0;
     }
   }
-  else
+  else // if psram enabled but error was occured
   {
+    id = buffer_loc;
     json_data += "\"x_values\":[";
     for (int i = 0; i < DATA_SIZE; i++)
     {
@@ -172,6 +164,7 @@ String jsonify(uint32_t buffer_loc)
     }
   }
 #endif
+  DateTime now = rtc.now();
   json_data += "],";
   json_data += "\"sensor_type\":";
   json_data += '"';
@@ -180,10 +173,19 @@ String jsonify(uint32_t buffer_loc)
   json_data += ",\"battery_voltage\":";
   json_data += String(v_batt);
   json_data += ",\"signal_strength\":" + String(WiFi.RSSI());
-  json_data += ",\"id_data\":" + String(id_data);
+  json_data += ",\"id_data\":" + String(id);
   json_data += ",\"connection_lost\":" + String(connection_counter);
   json_data += ",\"sampling_frequency\":" + String(freq_sampling);
   json_data += ",\"packet_size\":" + String(DATA_SIZE);
+  json_data += ",\"hw_unix_time\":" + String(now.unixtime()) + "\n";
+  json_data += ",\"hw_time\":\"" +
+               String(now.year()) + "-" +
+               String(now.month()) + "-" +
+               String(now.day()) + "/" +
+               String(now.hour()) + ":" +
+               String(now.minute()) + ":" +
+               String(now.second()) +
+               "\"\n";
   json_data += "}";
 
   return json_data;

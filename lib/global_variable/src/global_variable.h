@@ -10,6 +10,7 @@
 #include <esp_task_wdt.h>
 #include "soc/soc.h"
 #include "soc/rtc_cntl_reg.h"
+#include "RTClib.h"
 
 // user typedef
 
@@ -19,11 +20,6 @@
 #define SENSOR_WDG
 #define WiFi_WDG
 #define board_v2
-
-#ifdef USING_MICRO_SD
-#include "FS.h"
-#include "SD_MMC.h"
-#endif
 
 #if !defined USING_PSRAM && defined board_v1
 #define RXD2 16
@@ -82,6 +78,7 @@ TaskHandle_t BUTTON_TASK;
 
 WiFiClient net;
 MQTTClient client(512, 512);
+RTC_DS1307 rtc;
 
 // global variables
 uint8_t counter = 0;
@@ -109,7 +106,15 @@ short x_values[BANK_SIZE][DATA_SIZE];
 short y_values[BANK_SIZE][DATA_SIZE];
 short z_values[BANK_SIZE][DATA_SIZE];
 
-#ifdef USING_PSRAM
+#if defined USING_MICRO_SD
+#include "FS.h"
+#include "SD_MMC.h"
+void init_sd_card();
+bool sd_append_log(String filename, String data);
+#include <sd_utils.h>
+#endif
+
+#if defined USING_PSRAM
 const uint32_t psram_bank_size = 5250;
 const uint32_t psram_packet_size = DATA_SIZE;
 
@@ -126,7 +131,6 @@ void write_z(uint16_t row, uint16_t col, int data);
 short read_x(uint16_t row, uint16_t col);
 short read_y(uint16_t row, uint16_t col);
 short read_z(uint16_t row, uint16_t col);
-
 #include <psram_utils.h>
 #endif
 
@@ -150,8 +154,16 @@ String JSONpassword;
 String JSONtopic;
 String JSONbroker;
 
+String JSONyear;
+String JSONmonth;
+String JSONday;
+String JSONhour;
+String JSONminute;
+String JSONsecond;
+
 // Function declarations
 // RTOS tasks
+void init_RTOS();
 void mqttSender(void *arguments);
 void serialHandler(void *arguments);
 void ledStatus(void *arguments);
@@ -183,4 +195,5 @@ String readString(uint16_t address);
 // Serial communication and JSON parsing functions
 void parseSerial();
 void parseJsonData(const String &jsonData);
+void parseTimeData(const String &jsonData);
 #endif

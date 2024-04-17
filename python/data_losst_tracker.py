@@ -13,7 +13,7 @@ last_connection_count = 0
 # CSV file name
 csv_file = "mqtt_data_log.csv"
 
-def log_to_csv(timestamp, event, message,RSSI,vbatt,qos):
+def log_to_csv(timestamp, event, message,RSSI,vbatt):
     with open(csv_file, mode='a', newline='') as file:
         writer = csv.writer(file)
         writer.writerow([timestamp, event, message,RSSI,vbatt])
@@ -21,13 +21,13 @@ def log_to_csv(timestamp, event, message,RSSI,vbatt,qos):
 def on_connect(client, userdata, flags, rc):
     print("Connected with result code " + str(rc))
     # Subscribe to the updated topic where your MQTT publisher is sending messages
-    client.subscribe("/shms/node_3/accelerometer")
+    client.subscribe("/shms/node_99/accelerometer")
 
 def on_message(client, userdata, msg):
     global last_received_id_data
     global last_RSSI
     global last_batt_voltage
-    global qos
+    # global qos
     global last_connection_count
 
     # Decode the JSON message
@@ -40,8 +40,8 @@ def on_message(client, userdata, msg):
         last_RSSI = data['signal_strength']
     if 'battery_voltage' in data:
         last_batt_voltage = data['battery_voltage']
-    if 'qos' in data:
-        qos = data['battery_voltage']
+    # if 'QoS' in data:
+    #     qos = data['battery_voltage']
     # Check if 'id_data' field is present
     if 'id_data' in data:
         received_id_data = data['id_data']
@@ -73,7 +73,7 @@ client.on_connect = on_connect
 client.on_message = on_message
 
 # Connect to the MQTT broker (replace "192.168.1.235" with the actual address)
-client.connect("192.168.1.235", 1883, 60)
+client.connect("192.168.15.54", 1883, 60)
 
 # Loop to maintain the connection and process incoming messages
 client.loop_forever()
