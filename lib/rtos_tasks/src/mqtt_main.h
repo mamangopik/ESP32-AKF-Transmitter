@@ -21,14 +21,15 @@ void mqttSender(void *arguments)
             connect();
         }
 
+#if defined WiFi_WDG
         if (WiFi.status() == WL_DISCONNECTED)
         {
             Serial.println("{\"ERR\":\"WiFi Error\"}");
             vTaskDelay(5000 / portTICK_PERIOD_MS);
-#ifdef WiFi_WDG
+
             ESP.restart();
-#endif
         }
+#endif
 
         for (uint32_t i = 0; i < BANK_SIZE; i++)
         {

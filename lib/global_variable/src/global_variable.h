@@ -13,25 +13,27 @@
 #include "RTClib.h"
 
 // user typedef
-
 #define USING_PSRAM
 #define USING_MICRO_SD
+#define USING_KALMAN_FILTER
 #define USING_LED_STATUS
 #define SENSOR_WDG
 #define WiFi_WDG
+// board version select
 #define board_v2
+// #define board_v1
 
 #if !defined USING_PSRAM && defined board_v1
 #define RXD2 16
 #define TXD2 17
 #endif
 
-#if !defined USING_PSRAM && defined board_v2
+#if defined USING_PSRAM && defined board_v1
 #define RXD2 26
 #define TXD2 27
 #endif
 
-#if defined USING_PSRAM
+#if defined board_v2
 #define RXD2 26
 #define TXD2 27
 #endif
@@ -51,9 +53,28 @@
 #define AKF_200_HZ 6
 #define AKF_500_HZ 7
 
+#define PRIORITY_IDLE 0
+#define PRIORITY_VERY_LOW 1
+#define PRIORITY_LOW 2
+#define PRIORITY_MEDIUM 3
+#define PRIORITY_HIGH 4
+#define PRIORITY_VERY_HIGH 5
+#define PRIORITY_REALTIME 6
+
+#define CPU_0 0
+#define CPU_1 1
+
+#if defined board_v2
 #define LEDSTATUSPIN 25
 #define ACTBUTTONPIN 0
 #define VSENSE_PIN 35
+#endif
+
+#if defined board_v1
+#define LEDSTATUSPIN 4
+#define ACTBUTTONPIN 0
+#define VSENSE_PIN 35
+#endif
 
 #define ACTBUTTONPIN_PRESS digitalRead(ACTBUTTONPIN) == 0
 #define ACTBUTTONPIN_RELEASE digitalRead(ACTBUTTONPIN) == 1
@@ -134,6 +155,21 @@ short read_z(uint16_t row, uint16_t col);
 #include <psram_utils.h>
 #endif
 
+#if defined USING_KALMAN_FILTER
+float X_XT, Y_XT, Z_XT;
+float X_PT = 100, Y_PT = 100, Z_PT = 100;
+float X_KT, Y_KT, Z_KT;
+float X_XT_prev, Y_XT_prev, Z_XT_prev;
+float X_PT_prev, Y_PT_prev, Z_PT_prev;
+float X_XT_update, Y_XT_update, Z_XT_update;
+float X_PT_update, Y_PT_update, Z_PT_update;
+float Q = 0.1;
+float R = 1;
+float x_kalman(float Xvalue);
+float y_kalman(float Xvalue);
+float z_kalman(float Xvalue);
+#endif
+
 int data_count = 0;
 int last_ts = 0;
 
@@ -175,6 +211,7 @@ void connect();
 void publishBuffer(uint32_t buffer_loc);
 void log_to_sd(String data);
 String jsonify(uint32_t buffer_loc);
+String kalmanJSON(byte storage_PSRAM, uint32_t buff_loc);
 
 // Sensor and hardware control functions
 void cekSensor();
@@ -204,4 +241,5 @@ void parseTimeData(const String &jsonData);
 #include <serial_parser.h>
 #include <eeprom_storage.h>
 #include <wifi_utils.h>
+#include <kalman_filter.h>
 #endif

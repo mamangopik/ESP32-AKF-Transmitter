@@ -79,7 +79,7 @@ void batteryStatus(void *arguments)
     {
         // Serial.println("loop BATTERY");
         float mv = analogReadMilliVolts(VSENSE_PIN);
-        mv = mv / 4700 * (4700 + 10000);
+        mv = mv / 10000 * (10000 + 10000);
         sum += (mv / 1000);
         i++;
         if (i == 5000)
