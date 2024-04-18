@@ -1,5 +1,6 @@
 #include <global_variable.h>
-
+#if !defined _serial_parser_h_
+#define _serial_parser_h_
 void parseSerial()
 {
   if (msg_in.length() > 0)
@@ -76,3 +77,4 @@ void parseSerial()
     }
   }
 }
+#endif

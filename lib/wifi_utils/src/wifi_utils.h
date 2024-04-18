@@ -1,5 +1,7 @@
 #include <global_variable.h>
-void initWifi()
+#if !defined _wifi_utils_h_
+#define _wifi_utils_h_
+void initWifi(unsigned long timeout = 10000)
 {
     wlan_timer = millis();
     String ssid = readString(MSTR0);
@@ -19,7 +21,7 @@ void initWifi()
     {
         led_status_mode = CONNECTING_WIFI;
         delay(500);
-        if (millis() - wlan_timer > 10000)
+        if (millis() - wlan_timer > timeout)
         {
             Serial.println("{\"ERR\":\"WiFi Error\"}");
             vTaskDelay(5000 / portTICK_PERIOD_MS);
@@ -29,3 +31,4 @@ void initWifi()
     Serial.println("{\"SUCCESS\":\"Connected to WiFi\"}");
     vTaskDelay(1000 / portTICK_PERIOD_MS);
 }
+#endif

@@ -3,5 +3,7 @@
     "files.associations": {
         "fstream": "cpp",
         "string": "cpp"
-    }
+    },
+    "vscode-pets.petSize": "large",
+    "vscode-pets.petColor": "gray"
 }

@@ -170,7 +170,7 @@ void ledStatus(void *arguments);
 void sensorReader(void *pvParameters);
 
 // WiFi and MQTT-related functions
-void initWifi();
+void initWifi(unsigned long timeout);
 void connect();
 void publishBuffer(uint32_t buffer_loc);
 void log_to_sd(String data);
@@ -196,4 +196,12 @@ String readString(uint16_t address);
 void parseSerial();
 void parseJsonData(const String &jsonData);
 void parseTimeData(const String &jsonData);
+
+#include <json_parser.h>
+#include <rtos_tasks.h>
+#include <mqtt_utils.h>
+#include <sensor_utils.h>
+#include <serial_parser.h>
+#include <eeprom_storage.h>
+#include <wifi_utils.h>
 #endif

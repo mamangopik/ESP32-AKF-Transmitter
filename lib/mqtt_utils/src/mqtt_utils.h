@@ -1,4 +1,6 @@
 #include <global_variable.h>
+#if !defined _mqtt_utils_h_
+#define _mqtt_utils_h_
 
 void connect()
 {
@@ -190,3 +192,4 @@ String jsonify(uint32_t buffer_loc)
 
   return json_data;
 }
+#endif

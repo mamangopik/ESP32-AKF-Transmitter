@@ -1,4 +1,6 @@
 #include <global_variable.h>
+#if !defined _sensor_utils_h_
+#define _sensor_utils_h_
 
 void cekSensor()
 {
@@ -188,3 +190,5 @@ unsigned char calculateChecksum(unsigned char command[], unsigned char length)
   sum &= 0xFF; // Masking the sum to ensure it fits within a byte
   return sum;
 }
+
+#endif

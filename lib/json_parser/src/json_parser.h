@@ -1,4 +1,7 @@
 #include <global_variable.h>
+#if !defined _json_parser_h_
+#define _json_parser_h_
+
 // Extract individual values by searching for keys
 String ssid, password, broker, topic;
 String year, month, day, hour, minute, second;
@@ -114,3 +117,4 @@ void parseTimeData(const String &jsonData)
     JSONsecond = jsonContent.substring(secondStart + 1, secondEnd);
   }
 }
+#endif

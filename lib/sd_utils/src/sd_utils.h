@@ -1,4 +1,6 @@
 #include <global_variable.h>
+#if !defined _sd_utils_h_
+#define _sd_utils_h_
 void init_sd_card()
 {
     if (!SD_MMC.begin())
@@ -46,3 +48,5 @@ bool sd_append_log(String filename, String data)
         return 0;
     }
 }
+
+#endif

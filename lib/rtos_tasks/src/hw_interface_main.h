@@ -1,5 +1,6 @@
-#include <arduino.h>
 #include <global_variable.h>
+#if !defined _hw_interface_main_h_
+#define _hw_interface_main_h_
 void serialHandler(void *arguments)
 {
     while (1)
@@ -165,3 +166,4 @@ void actButton(void *pvParameters)
         vTaskDelay(5 / portTICK_PERIOD_MS);
     }
 }
+#endif

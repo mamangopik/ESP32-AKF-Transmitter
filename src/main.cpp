@@ -1,4 +1,4 @@
-#include "header.h"
+#include <global_variable.h>
 void setup()
 {
     // board preparation
@@ -6,7 +6,6 @@ void setup()
     WRITE_PERI_REG(RTC_CNTL_BROWN_OUT_REG, 0); // disable brownout detector
     EEPROM.begin(EEPROM_SIZE);
     Serial.begin(115200);
-
 #if defined USING_PSRAM
     psram_begin();
 #endif

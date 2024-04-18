@@ -1,5 +1,6 @@
 #include <global_variable.h>
-
+#if !defined _psram_utils_h_
+#define _psram_utils_h_
 void psram_begin()
 {
     if (psramInit())
@@ -51,3 +52,5 @@ short read_z(uint16_t row, uint16_t col)
 {
     return spi_ram_z[row * col];
 }
+
+#endif
