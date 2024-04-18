@@ -73,21 +73,26 @@ void batteryStatus(void *arguments)
     Serial.println("{\"INFO\":\"Voltage sensor is available\"}");
     pinMode(VSENSE_PIN, INPUT);
     analogReadResolution(12); // 12-Bit res
-    float sum = 0.0;
+    double batt_Q = 0.1;      // Process noise covariance
+    double batt_R = 0.1;      // Measurement noise covariance
+    double batt_P = 0.1;      // Estimation error covariance
+    double batt_K = 0.1;      // Kalman gain
+    double batt_X;            // The state
     byte i = 0;
     while (1)
     {
-        // Serial.println("loop BATTERY");
-        float mv = analogReadMilliVolts(VSENSE_PIN);
-        mv = mv / 10000 * (10000 + 10000);
-        sum += (mv / 1000);
-        i++;
-        if (i == 5000)
-        {
-            v_batt = sum / 5000.0;
-            i = 0;
-            sum = 0;
-        }
+        v_batt = analogReadMilliVolts(VSENSE_PIN);
+        v_batt = v_batt / 10000 * (10000 + 10000);
+        v_batt = v_batt / 1000;
+        // Prediction update
+        batt_P += batt_Q;
+
+        // Measurement update
+        batt_K = batt_P / (batt_P + batt_R);
+        batt_X += batt_K * (v_batt - batt_X);
+        batt_P *= (1 - batt_K);
+
+        v_batt = batt_X;
         vTaskDelay(5 / portTICK_PERIOD_MS);
     }
 }
@@ -104,16 +109,9 @@ void hardwareStatus(void *arguments)
     if (!rtc.isrunning())
     {
         Serial.println("RTC is NOT running, let's set the time!");
-        // When time needs to be set on a new device, or after a power loss, the
-        // following line sets the RTC to the date & time this sketch was compiled
-        // rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));
-        // This line sets the RTC with an explicit date & time, for example to set
-        // January 21, 2014 at 3am you would call:
-        // rtc.adjust(DateTime(2014, 1, 21, 3, 0, 0));
     }
     while (1)
     {
-        // Serial.println("loop BATTERY");
         DateTime now = rtc.now();
         String payload = "";
         payload += "{";
