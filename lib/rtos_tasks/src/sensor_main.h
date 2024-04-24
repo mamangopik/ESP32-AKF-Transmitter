@@ -1,4 +1,3 @@
-#include <arduino.h>
 #include <global_variable.h>
 void sensorReader(void *pvParameters)
 {

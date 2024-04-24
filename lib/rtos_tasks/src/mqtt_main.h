@@ -1,4 +1,3 @@
-#include <arduino.h>
 #include <global_variable.h>
 void mqttSender(void *arguments)
 {
@@ -31,6 +30,7 @@ void mqttSender(void *arguments)
         }
 #endif
 
+#if defined board_v1 || !defined USING_PSRAM
         for (uint32_t i = 0; i < BANK_SIZE; i++)
         {
             if (buffer_ready[i] == 1 && client.connected())
@@ -40,6 +40,55 @@ void mqttSender(void *arguments)
                 vTaskDelay(1 / portTICK_PERIOD_MS);
             }
         }
+#endif
+#if defined USING_PSRAM && defined board_v2
+        if (psram_ready != 1)
+        {
+            for (uint32_t i = 0; i < BANK_SIZE; i++)
+            {
+                if (buffer_ready[i] == 1 && client.connected())
+                {
+                    publishBuffer(i);
+                    buffer_ready[i] = 0;
+                    vTaskDelay(1 / portTICK_PERIOD_MS);
+                }
+            }
+        }
+        else
+        {
+            for (uint32_t i = 0; i < BANK_SIZE; i++)
+            {
+                if (buffer_ready[i])
+                {
+                    // copying from DRAM to SPI RAM or PSRAM
+                    for (int j = 0; j < DATA_SIZE; j++)
+                    {
+                        write_x(psram_mon, i, x_values[i][j]);
+                        write_y(psram_mon, i, y_values[i][j]);
+                        write_z(psram_mon, i, z_values[i][j]);
+                    }
+                    Serial.println("{\"INFO\":\"copy from buffer at " + String(i) + " to psram at " + String(psram_mon) + " \"}");
+                    psram_buffer_ready[psram_mon] = 1;
+                    psram_mon++;
+                    if (psram_mon == psram_bank_size)
+                    {
+                        psram_mon = 0;
+                    }
+                    buffer_ready[i] = 0;
+                }
+            }
+
+            for (uint32_t i = 0; i < psram_bank_size; i++)
+            {
+                if (psram_buffer_ready[i] == 1 && client.connected())
+                {
+                    publishBuffer(i);
+                    psram_buffer_ready[i] = 0;
+                    vTaskDelay(1 / portTICK_PERIOD_MS);
+                }
+            }
+        }
+#endif
         vTaskDelay(5 / portTICK_PERIOD_MS);
     }
 }

@@ -116,12 +116,13 @@ uint8_t psram_ready = 0;
 uint16_t freq_sampling = 50;
 
 uint32_t buffer_mon = 0;
+uint32_t psram_mon = 0;
 
 String msg_in = "";
 String sensor_topic = "";
 String raw = "";
 
-const int DATA_SIZE = 128;
+const int DATA_SIZE = 100;
 const int BANK_SIZE = 100;
 short x_values[BANK_SIZE][DATA_SIZE];
 short y_values[BANK_SIZE][DATA_SIZE];
@@ -138,6 +139,7 @@ bool sd_append_log(String filename, String data);
 #if defined USING_PSRAM
 const uint32_t psram_bank_size = 5250;
 const uint32_t psram_packet_size = DATA_SIZE;
+byte psram_buffer_ready[psram_bank_size] = {0};
 
 uint32_t psram_buff_loc = 0;
 

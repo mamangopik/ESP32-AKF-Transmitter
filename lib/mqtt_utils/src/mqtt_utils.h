@@ -22,12 +22,24 @@ void publishBuffer(uint32_t buffer_loc)
   sensor_topic.toCharArray(buf_sensor_topic, sensor_topic.length() + 1);
 
   String payload = jsonify(buffer_loc);
-
-  if (client.publish(buf_sensor_topic, payload.c_str(), payload.length(), false, QoS))
+  byte fail_cnt = 0;
+  while (fail_cnt < 10)
   {
-    Serial.println("{\"SUCCESS\":\"Message sent\"}");
+    if (fail_cnt > 0)
+    {
+      Serial.println("{\"WARN\":\"retrying to sending message\"}");
+    }
+    if (client.publish(buf_sensor_topic, payload.c_str(), payload.length(), false, QoS))
+    {
+      Serial.println("{\"SUCCESS\":\"Message sent\"}");
+      fail_cnt = 0; // reset fail_cnt counter to prevent SD card Logging
+    }
+    else
+    {
+      fail_cnt++; // increment fail_cnt counter if failed sending message
+    }
   }
-  else
+  if (fail_cnt > 0)
   {
 #if defined USING_MICRO_SD && defined board_v2
     Serial.println("{\"WARN\":\"Message doesn't sent\"}");
@@ -90,19 +102,11 @@ String jsonify(uint32_t buffer_loc)
   String json_data = "{";
   if (psram_ready == 1)
   {
-    // copying from DRAM to SPI RAM or PSRAM
-    for (int i = 0; i < DATA_SIZE; i++)
-    {
-      write_x(psram_buff_loc, i, x_values[buffer_loc][i]);
-      write_y(psram_buff_loc, i, y_values[buffer_loc][i]);
-      write_z(psram_buff_loc, i, z_values[buffer_loc][i]);
-    }
-
     // read data from SPI RAM or PSRAM
     json_data += "\"x_values\":[";
     for (int i = 0; i < DATA_SIZE; i++)
     {
-      json_data += String(read_x(psram_buff_loc, i));
+      json_data += String(read_x(buffer_loc, i));
       if (i != DATA_SIZE - 1)
       {
         json_data += ",";
@@ -111,7 +115,7 @@ String jsonify(uint32_t buffer_loc)
     json_data += "],\"y_values\":[";
     for (int i = 0; i < DATA_SIZE; i++)
     {
-      json_data += String(read_y(psram_buff_loc, i));
+      json_data += String(read_y(buffer_loc, i));
       if (i != DATA_SIZE - 1)
       {
         json_data += ",";
@@ -120,7 +124,7 @@ String jsonify(uint32_t buffer_loc)
     json_data += "],\"z_values\":[";
     for (int i = 0; i < DATA_SIZE; i++)
     {
-      json_data += String(read_z(psram_buff_loc, i));
+      json_data += String(read_z(buffer_loc, i));
       if (i != DATA_SIZE - 1)
       {
         json_data += ",";
@@ -130,16 +134,10 @@ String jsonify(uint32_t buffer_loc)
     json_data += "],";
 
 #if defined USING_KALMAN_FILTER
-    json_data += kalmanJSON(1, psram_buff_loc);
+    json_data += kalmanJSON(1, buffer_loc);
 #endif
 
-    id = psram_buff_loc;
-    // address rolling mechanism for SPI RAM or PSRAM
-    psram_buff_loc++;
-    if (psram_buff_loc == psram_bank_size)
-    {
-      psram_buff_loc = 0;
-    }
+    id = buffer_loc;
   }
   else // if psram enabled but error was occured
   {
