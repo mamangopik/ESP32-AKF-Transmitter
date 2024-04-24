@@ -122,7 +122,7 @@ String msg_in = "";
 String sensor_topic = "";
 String raw = "";
 
-const int DATA_SIZE = 100;
+const int DATA_SIZE = 32;
 const int BANK_SIZE = 100;
 short x_values[BANK_SIZE][DATA_SIZE];
 short y_values[BANK_SIZE][DATA_SIZE];

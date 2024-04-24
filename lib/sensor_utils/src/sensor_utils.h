@@ -129,7 +129,7 @@ void processCommand()
     unsigned long duration = millis() - start_time;
     String timedata = String(duration);
     start_time = millis(); // Start new time measurement
-    Serial.println("{\"INFO\":\"buffer_mon at " + String(buffer_mon) + " psram_mon at " + String(psram_mon) + " \"}");
+    // Serial.println("{\"INFO\":\"buffer_mon at " + String(buffer_mon) + " psram_mon at " + String(psram_mon) + " \"}");
   }
 }
 

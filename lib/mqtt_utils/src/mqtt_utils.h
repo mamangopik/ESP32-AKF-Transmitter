@@ -33,6 +33,7 @@ void publishBuffer(uint32_t buffer_loc)
     {
       Serial.println("{\"SUCCESS\":\"Message sent\"}");
       fail_cnt = 0; // reset fail_cnt counter to prevent SD card Logging
+      break;        // break the loop so data only sent once
     }
     else
     {
