@@ -29,28 +29,28 @@ void psram_begin()
 
 void write_x(uint16_t row, uint16_t col, int data)
 {
-    spi_ram_x[row * col] = data;
+    spi_ram_x[row * DATA_SIZE + col] = data;
 }
 void write_y(uint16_t row, uint16_t col, int data)
 {
-    spi_ram_y[row * col] = data;
+    spi_ram_y[row * DATA_SIZE + col] = data;
 }
 void write_z(uint16_t row, uint16_t col, int data)
 {
-    spi_ram_z[row * col] = data;
+    spi_ram_z[row * DATA_SIZE + col] = data;
 }
 
 short read_x(uint16_t row, uint16_t col)
 {
-    return spi_ram_x[row * col];
+    return spi_ram_x[row * DATA_SIZE + col];
 }
 short read_y(uint16_t row, uint16_t col)
 {
-    return spi_ram_y[row * col];
+    return spi_ram_y[row * DATA_SIZE + col];
 }
 short read_z(uint16_t row, uint16_t col)
 {
-    return spi_ram_z[row * col];
+    return spi_ram_z[row * DATA_SIZE + col];
 }
 
 #endif

@@ -4,7 +4,7 @@
 
 // Extract individual values by searching for keys
 String ssid, password, broker, topic;
-String year, month, day, hour, minute, second;
+// String syear, smonth, sday, shour, sminute, ssecond;
 
 void parseJsonData(const String &jsonData)
 {

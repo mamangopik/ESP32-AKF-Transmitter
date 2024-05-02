@@ -55,7 +55,13 @@ void publishBuffer(uint32_t buffer_loc)
 
 void log_to_sd(String data)
 {
-  String path = "/BRAINS_LOG_" + String(99) + ".csv";
+  data_lost++;
+  String datetimeString = "";
+  datetimeString += String(year) + "-";
+  datetimeString += String(month) + "-";
+  datetimeString += String(date);
+  data = datetimeString + ',' + data;
+  String path = "/ACC_LOG_" + datetimeString + ".csv";
   if (sd_append_log(path, data))
   {
     Serial.println("{\"SUCCESS\":\"Data Logged to SD Card\"}");
@@ -65,13 +71,40 @@ void log_to_sd(String data)
     Serial.println("{\"ERR\":\"SD card not attached or not configured\"}");
   }
 }
-
 #if !defined USING_PSRAM || defined board_v1
 String jsonify(uint32_t buffer_loc)
 {
   uint32_t id = 0;
   String json_data = "{";
-  DateTime now = rtc.now();
+  id = buffer_loc;
+  json_data += "\"x_values\":[";
+  for (int i = 0; i < DATA_SIZE; i++)
+  {
+    json_data += String(x_values[buffer_loc][i]);
+    if (i != DATA_SIZE - 1)
+    {
+      json_data += ",";
+    }
+  }
+  json_data += "],\"y_values\":[";
+  for (int i = 0; i < DATA_SIZE; i++)
+  {
+    json_data += String(y_values[buffer_loc][i]);
+    if (i != DATA_SIZE - 1)
+    {
+      json_data += ",";
+    }
+  }
+  json_data += "],\"z_values\":[";
+  for (int i = 0; i < DATA_SIZE; i++)
+  {
+    json_data += String(z_values[buffer_loc][i]);
+    if (i != DATA_SIZE - 1)
+    {
+      json_data += ",";
+    }
+  }
+  json_data += "],";
   json_data += "\"sensor_type\":";
   json_data += '"';
   json_data += "accelerometer";
@@ -83,14 +116,14 @@ String jsonify(uint32_t buffer_loc)
   json_data += ",\"connection_lost\":" + String(connection_counter);
   json_data += ",\"sampling_frequency\":" + String(freq_sampling);
   json_data += ",\"packet_size\":" + String(DATA_SIZE);
-  json_data += ",\"hw_unix_time\":" + String(now.unixtime()) + "\n";
+  json_data += ",\"hw_unix_time\":" + String(unix_timestamp) + "\n";
   json_data += ",\"hw_time\":\"" +
-               String(now.year()) + "-" +
-               String(now.month()) + "-" +
-               String(now.day()) + "/" +
-               String(now.hour()) + ":" +
-               String(now.minute()) + ":" +
-               String(now.second()) +
+               String(year) + "-" +
+               String(month) + "-" +
+               String(date) + "/" +
+               String(hour) + ":" +
+               String(minute) + ":" +
+               String(second) +
                "\"\n";
   json_data += "}";
   return json_data;
@@ -178,7 +211,6 @@ String jsonify(uint32_t buffer_loc)
   }
 
   // JSON footer
-  DateTime now = rtc.now();
   json_data += "\"sensor_type\":";
   json_data += '"';
   json_data += "accelerometer";
@@ -190,14 +222,14 @@ String jsonify(uint32_t buffer_loc)
   json_data += ",\"connection_lost\":" + String(connection_counter);
   json_data += ",\"sampling_frequency\":" + String(freq_sampling);
   json_data += ",\"packet_size\":" + String(DATA_SIZE);
-  json_data += ",\"hw_unix_time\":" + String(now.unixtime()) + "\n";
+  json_data += ",\"hw_unix_time\":" + String(unix_timestamp) + "\n";
   json_data += ",\"hw_time\":\"" +
-               String(now.year()) + "-" +
-               String(now.month()) + "-" +
-               String(now.day()) + "/" +
-               String(now.hour()) + ":" +
-               String(now.minute()) + ":" +
-               String(now.second()) +
+               String(year) + "-" +
+               String(month) + "-" +
+               String(date) + "/" +
+               String(hour) + ":" +
+               String(minute) + ":" +
+               String(second) +
                "\"\n";
   json_data += "}";
   return json_data;

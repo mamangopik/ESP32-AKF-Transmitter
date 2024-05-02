@@ -93,12 +93,22 @@ void batteryStatus(void *arguments)
         batt_P *= (1 - batt_K);
 
         v_batt = batt_X;
-        vTaskDelay(5 / portTICK_PERIOD_MS);
+        vTaskDelay(100 / portTICK_PERIOD_MS);
     }
 }
 
-void hardwareStatus(void *arguments)
+void parameter_logger(void *arguments)
 {
+    while (1)
+    {
+        testing_param_logger();
+        vTaskDelay(30000 / portTICK_PERIOD_MS);
+    }
+}
+
+void rtc_clock(void *arguments)
+{
+    RTC_DS1307 rtc;
     if (!rtc.begin())
     {
         Serial.println("Couldn't find RTC");
@@ -113,6 +123,33 @@ void hardwareStatus(void *arguments)
     while (1)
     {
         DateTime now = rtc.now();
+        unix_timestamp = now.unixtime();
+        year = now.year();
+        month = now.month();
+        date = now.day();
+        hour = now.hour();
+        minute = now.minute();
+        second = now.second();
+        if (set_rtc_flag == 1)
+        {
+            rtc.adjust(
+                DateTime(JSONyear.toInt(),
+                         JSONmonth.toInt(),
+                         JSONday.toInt(),
+                         JSONhour.toInt(),
+                         JSONminute.toInt(),
+                         JSONsecond.toInt()));
+            set_rtc_flag = 0;
+        };
+        vTaskDelay(500 / portTICK_PERIOD_MS);
+    }
+}
+
+void hardwareStatus(void *arguments)
+{
+
+    while (1)
+    {
         String payload = "";
         payload += "{";
         payload += "\"hardware_info\":{\n";
@@ -121,19 +158,19 @@ void hardwareStatus(void *arguments)
         payload += "\t\t\"free_memory\":" + String(esp_get_free_heap_size()) + ",\n";
         payload += "\t\t\"node_qos\":" + String(QoS) + ",\n";
         payload += "\t\t\"led_status\":" + String(led_status_mode) + ",\n";
-        payload += "\t\t\"hw_unix_time\":" + String(now.unixtime()) + ",\n";
+        payload += "\t\t\"hw_unix_time\":" + String(unix_timestamp) + ",\n";
         payload += "\t\t\"hw_time\":\"" +
-                   String(now.year()) + "-" +
-                   String(now.month()) + "-" +
-                   String(now.day()) + "/" +
-                   String(now.hour()) + ":" +
-                   String(now.minute()) + ":" +
-                   String(now.second()) +
+                   String(year) + "-" +
+                   String(month) + "-" +
+                   String(date) + "/" +
+                   String(hour) + ":" +
+                   String(minute) + ":" +
+                   String(second) +
                    "\"\n";
         payload += "\t}\n";
         payload += "}";
         Serial.println(payload);
-        vTaskDelay(1000 / portTICK_PERIOD_MS);
+        vTaskDelay(10000 / portTICK_PERIOD_MS);
     }
 }
 

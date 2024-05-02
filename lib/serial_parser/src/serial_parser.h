@@ -45,13 +45,13 @@ void parseSerial()
     {
       parseTimeData(cmd_value);
       // January 21, 2014 at 3am you would call:
-      rtc.adjust(
-          DateTime(JSONyear.toInt(),
-                   JSONmonth.toInt(),
-                   JSONday.toInt(),
-                   JSONhour.toInt(),
-                   JSONminute.toInt(),
-                   JSONsecond.toInt()));
+      year_sp = JSONyear.toInt();
+      month_sp = JSONmonth.toInt();
+      date_sp = JSONday.toInt();
+      hour_sp = JSONhour.toInt();
+      minute_sp = JSONminute.toInt();
+      second_sp = JSONsecond.toInt();
+      set_rtc_flag = 1;
     }
     else if (command == ">reboot:")
     {

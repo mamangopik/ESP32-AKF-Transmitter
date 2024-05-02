@@ -14,7 +14,7 @@ void initWifi(unsigned long timeout = 10000)
     char buf_PWD[100];
     ssid.toCharArray(buf_SSID, ssid.length() + 1);
     password.toCharArray(buf_PWD, password.length() + 1);
-
+    WiFi.setTxPower(WIFI_POWER_19_5dBm);
     WiFi.mode(WIFI_STA);
     WiFi.begin(buf_SSID, buf_PWD);
     while (WiFi.status() != WL_CONNECTED)
@@ -28,7 +28,18 @@ void initWifi(unsigned long timeout = 10000)
             ESP.restart();
         }
     }
+    WiFi.setTxPower(WIFI_POWER_19_5dBm);
     Serial.println("{\"SUCCESS\":\"Connected to WiFi\"}");
     vTaskDelay(1000 / portTICK_PERIOD_MS);
+}
+
+void cek_wifi()
+{
+    if (WiFi.status() == WL_DISCONNECTED)
+    {
+        Serial.println("{\"ERR\":\"WiFi Error\"}");
+        vTaskDelay(5000 / portTICK_PERIOD_MS);
+        ESP.restart();
+    }
 }
 #endif

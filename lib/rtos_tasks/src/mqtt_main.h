@@ -8,7 +8,7 @@ void mqttSender(void *arguments)
     char buf_broker[100];
     broker.toCharArray(buf_broker, broker.length() + 1);
     String topic = readString(MSTR3);
-    client.setTimeout(10000);
+    client.setTimeout(TCP_Timeout);
     client.begin(buf_broker, net);
     // client.begin("broker.hivemq.com", net);
     while (1)
@@ -19,16 +19,6 @@ void mqttSender(void *arguments)
         {
             connect();
         }
-
-#if defined WiFi_WDG
-        if (WiFi.status() == WL_DISCONNECTED)
-        {
-            Serial.println("{\"ERR\":\"WiFi Error\"}");
-            vTaskDelay(5000 / portTICK_PERIOD_MS);
-
-            ESP.restart();
-        }
-#endif
 
 #if defined board_v1 || !defined USING_PSRAM
         for (uint32_t i = 0; i < BANK_SIZE; i++)
@@ -42,6 +32,7 @@ void mqttSender(void *arguments)
         }
 #endif
 #if defined USING_PSRAM && defined board_v2
+        // if psram not configured
         if (psram_ready != 1)
         {
             for (uint32_t i = 0; i < BANK_SIZE; i++)
@@ -54,7 +45,7 @@ void mqttSender(void *arguments)
                 }
             }
         }
-        else
+        else // if psram configured, then copy buffered sensor data to psram
         {
             for (uint32_t i = 0; i < BANK_SIZE; i++)
             {
@@ -63,11 +54,11 @@ void mqttSender(void *arguments)
                     // copying from DRAM to SPI RAM or PSRAM
                     for (int j = 0; j < DATA_SIZE; j++)
                     {
-                        write_x(psram_mon, i, x_values[i][j]);
-                        write_y(psram_mon, i, y_values[i][j]);
-                        write_z(psram_mon, i, z_values[i][j]);
+                        write_x(psram_mon, j, x_values[i][j]);
+                        write_y(psram_mon, j, y_values[i][j]);
+                        write_z(psram_mon, j, z_values[i][j]);
                     }
-                    Serial.println("{\"INFO\":\"copy from buffer at " + String(i) + " to psram at " + String(psram_mon) + " \"}");
+                    // Serial.println("{\"INFO\":\"copy from buffer at " + String(i) + " to psram at " + String(psram_mon) + " \"}");
                     psram_buffer_ready[psram_mon] = 1;
                     psram_mon++;
                     if (psram_mon == psram_bank_size)
@@ -78,7 +69,7 @@ void mqttSender(void *arguments)
                 }
             }
 
-            for (uint32_t i = 0; i < psram_bank_size; i++)
+            for (uint32_t i = 0; i < psram_bank_size; i++) // sending stored sensor data stored on psram
             {
                 if (psram_buffer_ready[i] == 1 && client.connected())
                 {

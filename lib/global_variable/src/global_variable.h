@@ -96,10 +96,11 @@ TaskHandle_t SERIAL_TASK;
 TaskHandle_t BATTERY_TASK;
 TaskHandle_t HWINFO_TASK;
 TaskHandle_t BUTTON_TASK;
+TaskHandle_t RTC_TIME_TASK;
+TaskHandle_t PARAM_LOGGER_TASK;
 
 WiFiClient net;
 MQTTClient client(512, 512);
-RTC_DS1307 rtc;
 
 // global variables
 uint8_t counter = 0;
@@ -117,13 +118,25 @@ uint16_t freq_sampling = 50;
 
 uint32_t buffer_mon = 0;
 uint32_t psram_mon = 0;
+uint32_t data_lost = 0;
+
+uint32_t TCP_Timeout = 10000; // ms
 
 String msg_in = "";
 String sensor_topic = "";
 String raw = "";
 
-const int DATA_SIZE = 32;
-const int BANK_SIZE = 100;
+unsigned long unix_timestamp;
+uint16_t year, year_sp;
+uint8_t month, month_sp;
+uint8_t date, date_sp;
+uint8_t hour, hour_sp;
+uint8_t minute, minute_sp;
+uint8_t second, second_sp;
+uint8_t set_rtc_flag = 0;
+
+const int DATA_SIZE = 256;
+const int BANK_SIZE = (int)(10000 / DATA_SIZE);
 short x_values[BANK_SIZE][DATA_SIZE];
 short y_values[BANK_SIZE][DATA_SIZE];
 short z_values[BANK_SIZE][DATA_SIZE];
@@ -137,7 +150,7 @@ bool sd_append_log(String filename, String data);
 #endif
 
 #if defined USING_PSRAM
-const uint32_t psram_bank_size = 5250;
+const uint32_t psram_bank_size = (uint32_t)(510000 / DATA_SIZE);
 const uint32_t psram_packet_size = DATA_SIZE;
 byte psram_buffer_ready[psram_bank_size] = {0};
 
@@ -206,9 +219,11 @@ void mqttSender(void *arguments);
 void serialHandler(void *arguments);
 void ledStatus(void *arguments);
 void sensorReader(void *pvParameters);
+void rtc_clock(void *arguments);
 
 // WiFi and MQTT-related functions
 void initWifi(unsigned long timeout);
+void cek_wifi();
 void connect();
 void publishBuffer(uint32_t buffer_loc);
 void log_to_sd(String data);
@@ -236,6 +251,8 @@ void parseSerial();
 void parseJsonData(const String &jsonData);
 void parseTimeData(const String &jsonData);
 
+bool testing_param_logger();
+
 #include <json_parser.h>
 #include <rtos_tasks.h>
 #include <mqtt_utils.h>
@@ -244,4 +261,5 @@ void parseTimeData(const String &jsonData);
 #include <eeprom_storage.h>
 #include <wifi_utils.h>
 #include <kalman_filter.h>
+#include <param_logger.h>
 #endif
