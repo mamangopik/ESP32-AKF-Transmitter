@@ -66,7 +66,7 @@ def on_message(client, userdata, msg):
         last_received_id_data = received_id_data
 
 # Create an MQTT client instance
-client = mqtt.Client()
+client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
 
 # Set up the callback functions
 client.on_connect = on_connect

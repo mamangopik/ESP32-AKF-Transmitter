@@ -4,18 +4,19 @@
 
 void connect()
 {
+  led_status_mode = DISCONNECTED;
   String channel = String(WiFi.macAddress());
-  Serial.print("\nconnecting...");
+  Serial.print("connecting...");
   connection_counter++;
   if (client.connect(channel.c_str(), "public", "public"))
   {
     led_status_mode = CONNECTED;
     Serial.println("\nconnected!");
   }
-  vTaskDelay(10 / portTICK_PERIOD_MS);
+  vTaskDelay(100 / portTICK_PERIOD_MS);
 }
 
-void publishBuffer(uint32_t buffer_loc)
+byte publishBuffer(uint32_t buffer_loc)
 {
   sensor_topic.trim();
   char buf_sensor_topic[100];
@@ -23,33 +24,13 @@ void publishBuffer(uint32_t buffer_loc)
 
   String payload = jsonify(buffer_loc);
   byte fail_cnt = 0;
-  while (fail_cnt < 10)
+  if (client.publish(buf_sensor_topic, payload.c_str(), payload.length(), false, QoS))
   {
-    if (fail_cnt > 0)
-    {
-      Serial.println("{\"WARN\":\"retrying to sending message\"}");
-    }
-    if (client.publish(buf_sensor_topic, payload.c_str(), payload.length(), false, QoS))
-    {
-      Serial.println("{\"SUCCESS\":\"Message sent\"}");
-      fail_cnt = 0; // reset fail_cnt counter to prevent SD card Logging
-      break;        // break the loop so data only sent once
-    }
-    else
-    {
-      fail_cnt++; // increment fail_cnt counter if failed sending message
-    }
+    return 1;
   }
-  if (fail_cnt > 0)
+  else
   {
-#if defined USING_MICRO_SD && defined board_v2
-    Serial.println("{\"WARN\":\"Message doesn't sent\"}");
-    log_to_sd(payload);
-#endif
-
-#if !defined USING_MICRO_SD || defined board_v1
-    Serial.println("{\"ERR\":\"Message doesn't sent\"}");
-#endif
+    return 0;
   }
 }
 
@@ -104,6 +85,7 @@ String jsonify(uint32_t buffer_loc)
       json_data += ",";
     }
   }
+  id = packet_id;
   json_data += "],";
   json_data += "\"sensor_type\":";
   json_data += '"';
@@ -116,6 +98,7 @@ String jsonify(uint32_t buffer_loc)
   json_data += ",\"connection_lost\":" + String(connection_counter);
   json_data += ",\"sampling_frequency\":" + String(freq_sampling);
   json_data += ",\"packet_size\":" + String(DATA_SIZE);
+  json_data += ",\"wifi_tx_power\":" + String(WiFi.getTxPower());
   json_data += ",\"hw_unix_time\":" + String(unix_timestamp) + "\n";
   json_data += ",\"hw_time\":\"" +
                String(year) + "-" +
@@ -210,6 +193,7 @@ String jsonify(uint32_t buffer_loc)
 #endif
   }
 
+  id = packet_id;
   // JSON footer
   json_data += "\"sensor_type\":";
   json_data += '"';
@@ -222,6 +206,7 @@ String jsonify(uint32_t buffer_loc)
   json_data += ",\"connection_lost\":" + String(connection_counter);
   json_data += ",\"sampling_frequency\":" + String(freq_sampling);
   json_data += ",\"packet_size\":" + String(DATA_SIZE);
+  json_data += ",\"wifi_tx_power\":" + String(WiFi.getTxPower());
   json_data += ",\"hw_unix_time\":" + String(unix_timestamp) + "\n";
   json_data += ",\"hw_time\":\"" +
                String(year) + "-" +
@@ -302,214 +287,5 @@ String kalmanJSON(byte storage_PSRAM, uint32_t buff_loc)
   return payload;
 }
 
-#endif
-
-// String jsonify(uint32_t buffer_loc)
-// {
-//   uint32_t id = 0;
-
-//   String json_data = "{";
-
-// #if !defined USING_PSRAM || defined board_v1
-//   id = buffer_loc;
-//   json_data += "\"x_values\":[";
-//   for (int i = 0; i < DATA_SIZE; i++)
-//   {
-//     json_data += String(x_values[buffer_loc][i]);
-//     if (i != DATA_SIZE - 1)
-//     {
-//       json_data += ",";
-//     }
-//   }
-//   json_data += "],\"y_values\":[";
-//   for (int i = 0; i < DATA_SIZE; i++)
-//   {
-//     json_data += String(y_values[buffer_loc][i]);
-//     if (i != DATA_SIZE - 1)
-//     {
-//       json_data += ",";
-//     }
-//   }
-//   json_data += "],\"z_values\":[";
-//   for (int i = 0; i < DATA_SIZE; i++)
-//   {
-//     json_data += String(z_values[buffer_loc][i]);
-//     if (i != DATA_SIZE - 1)
-//     {
-//       json_data += ",";
-//     }
-//   }
-//   json_data += "],";
-// #if defined USING_KALMAN_FILTER
-// #endif
-// #if defined USING_PSRAM && defined board_v2
-//   if (psram_ready == 1)
-//   {
-//     // copying from DRAM to SPI RAM or PSRAM
-//     for (int i = 0; i < DATA_SIZE; i++)
-//     {
-//       write_x(psram_buff_loc, i, x_values[buffer_loc][i]);
-//       write_y(psram_buff_loc, i, y_values[buffer_loc][i]);
-//       write_z(psram_buff_loc, i, z_values[buffer_loc][i]);
-//     }
-
-//     // read data from SPI RAM or PSRAM
-//     json_data += "\"x_values\":[";
-//     for (int i = 0; i < DATA_SIZE; i++)
-//     {
-//       json_data += String(read_x(psram_buff_loc, i));
-//       if (i != DATA_SIZE - 1)
-//       {
-//         json_data += ",";
-//       }
-//     }
-//     json_data += "],\"y_values\":[";
-//     for (int i = 0; i < DATA_SIZE; i++)
-//     {
-//       json_data += String(read_y(psram_buff_loc, i));
-//       if (i != DATA_SIZE - 1)
-//       {
-//         json_data += ",";
-//       }
-//     }
-//     json_data += "],\"z_values\":[";
-//     for (int i = 0; i < DATA_SIZE; i++)
-//     {
-//       json_data += String(read_z(psram_buff_loc, i));
-//       if (i != DATA_SIZE - 1)
-//       {
-//         json_data += ",";
-//       }
-//     }
-
-//     json_data += "],";
-// #if defined USING_KALMAN_FILTER
-//     json_data += "],";
-//     json_data += "\"xkf_values\":[";
-//     for (int i = 0; i < DATA_SIZE; i++)
-//     {
-//       json_data += String(x_kalman(read_x(psram_buff_loc, i)));
-//       if (i != DATA_SIZE - 1)
-//       {
-//         json_data += ",";
-//       }
-//     }
-//     json_data += "],\"ykf_values\":[";
-//     for (int i = 0; i < DATA_SIZE; i++)
-//     {
-//       json_data += String(y_kalman(read_y(psram_buff_loc, i)));
-//       if (i != DATA_SIZE - 1)
-//       {
-//         json_data += ",";
-//       }
-//     }
-//     json_data += "],\"zkf_values\":[";
-//     for (int i = 0; i < DATA_SIZE; i++)
-//     {
-//       json_data += String(z_kalman(read_z(psram_buff_loc, i)));
-//       if (i != DATA_SIZE - 1)
-//       {
-//         json_data += ",";
-//       }
-//     }
-// #endif
-
-//     id = psram_buff_loc;
-
-//     // address rolling mechanism for SPI RAM or PSRAM
-//     psram_buff_loc++;
-//     if (psram_buff_loc == psram_bank_size)
-//     {
-//       psram_buff_loc = 0;
-//     }
-//   }
-//   else // if psram enabled but error was occured
-//   {
-//     id = buffer_loc;
-//     json_data += "\"x_values\":[";
-//     for (int i = 0; i < DATA_SIZE; i++)
-//     {
-//       json_data += String(x_values[buffer_loc][i]);
-//       if (i != DATA_SIZE - 1)
-//       {
-//         json_data += ",";
-//       }
-//     }
-//     json_data += "],\"y_values\":[";
-//     for (int i = 0; i < DATA_SIZE; i++)
-//     {
-//       json_data += String(y_values[buffer_loc][i]);
-//       if (i != DATA_SIZE - 1)
-//       {
-//         json_data += ",";
-//       }
-//     }
-//     json_data += "],\"z_values\":[";
-//     for (int i = 0; i < DATA_SIZE; i++)
-//     {
-//       json_data += String(z_values[buffer_loc][i]);
-//       if (i != DATA_SIZE - 1)
-//       {
-//         json_data += ",";
-//       }
-//     }
-//     json_data += "],";
-// #if defined USING_KALMAN_FILTER
-//     json_data += "],";
-//     json_data += "\"xkf_values\":[";
-//     for (int i = 0; i < DATA_SIZE; i++)
-//     {
-//       json_data += String(x_kalman(read_x(psram_buff_loc, i)));
-//       if (i != DATA_SIZE - 1)
-//       {
-//         json_data += ",";
-//       }
-//     }
-//     json_data += "],\"ykf_values\":[";
-//     for (int i = 0; i < DATA_SIZE; i++)
-//     {
-//       json_data += String(y_kalman(read_y(psram_buff_loc, i)));
-//       if (i != DATA_SIZE - 1)
-//       {
-//         json_data += ",";
-//       }
-//     }
-//     json_data += "],\"zkf_values\":[";
-//     for (int i = 0; i < DATA_SIZE; i++)
-//     {
-//       json_data += String(z_kalman(read_z(psram_buff_loc, i)));
-//       if (i != DATA_SIZE - 1)
-//       {
-//         json_data += ",";
-//       }
-//     }
-// #endif
-//   }
-
-//   // JSON footer
-//   DateTime now = rtc.now();
-//   json_data += "\"sensor_type\":";
-//   json_data += '"';
-//   json_data += "accelerometer";
-//   json_data += '"';
-//   json_data += ",\"battery_voltage\":";
-//   json_data += String(v_batt);
-//   json_data += ",\"signal_strength\":" + String(WiFi.RSSI());
-//   json_data += ",\"id_data\":" + String(id);
-//   json_data += ",\"connection_lost\":" + String(connection_counter);
-//   json_data += ",\"sampling_frequency\":" + String(freq_sampling);
-//   json_data += ",\"packet_size\":" + String(DATA_SIZE);
-//   json_data += ",\"hw_unix_time\":" + String(now.unixtime()) + "\n";
-//   json_data += ",\"hw_time\":\"" +
-//                String(now.year()) + "-" +
-//                String(now.month()) + "-" +
-//                String(now.day()) + "/" +
-//                String(now.hour()) + ":" +
-//                String(now.minute()) + ":" +
-//                String(now.second()) +
-//                "\"\n";
-//   json_data += "}";
-
-//   return json_data;
-// }
-#endif
+#endif // endif board selector or psram
+#endif // eof

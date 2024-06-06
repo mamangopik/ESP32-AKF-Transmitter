@@ -14,8 +14,18 @@ void initWifi(unsigned long timeout = 10000)
     char buf_PWD[100];
     ssid.toCharArray(buf_SSID, ssid.length() + 1);
     password.toCharArray(buf_PWD, password.length() + 1);
-    WiFi.setTxPower(WIFI_POWER_19_5dBm);
     WiFi.mode(WIFI_STA);
+    vTaskDelay(1000 / portTICK_PERIOD_MS);
+
+    if (WiFi.setTxPower((wifi_power_t)76))
+    {
+        Serial.println("{\"SUCCESS\":\"" + String(WiFi.getTxPower()) + "\"}");
+    }
+    else
+    {
+        Serial.println("{\"ERR\":\"" + String(WiFi.getTxPower()) + "\"}");
+    }
+
     WiFi.begin(buf_SSID, buf_PWD);
     while (WiFi.status() != WL_CONNECTED)
     {
@@ -28,8 +38,12 @@ void initWifi(unsigned long timeout = 10000)
             ESP.restart();
         }
     }
-    WiFi.setTxPower(WIFI_POWER_19_5dBm);
+    vTaskDelay(1000 / portTICK_PERIOD_MS);
+    WiFi.setTxPower((wifi_power_t)76);
     Serial.println("{\"SUCCESS\":\"Connected to WiFi\"}");
+    Serial.println("{\"INFO\":\"" + String(WiFi.getTxPower()) + "\"}");
+    Serial.println("{\"INFO\":\"Status Power set 19.5 dB" + String(WiFi.setTxPower((wifi_power_t)76)) + "\"}");
+
     vTaskDelay(1000 / portTICK_PERIOD_MS);
 }
 

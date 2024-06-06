@@ -98,6 +98,7 @@ TaskHandle_t HWINFO_TASK;
 TaskHandle_t BUTTON_TASK;
 TaskHandle_t RTC_TIME_TASK;
 TaskHandle_t PARAM_LOGGER_TASK;
+TaskHandle_t QUEUE_TASK;
 
 WiFiClient net;
 MQTTClient client(512, 512);
@@ -140,6 +141,7 @@ const int BANK_SIZE = (int)(10000 / DATA_SIZE);
 short x_values[BANK_SIZE][DATA_SIZE];
 short y_values[BANK_SIZE][DATA_SIZE];
 short z_values[BANK_SIZE][DATA_SIZE];
+unsigned long packet_id = 0;
 
 #if defined USING_MICRO_SD
 #include "FS.h"
@@ -150,6 +152,7 @@ bool sd_append_log(String filename, String data);
 #endif
 
 #if defined USING_PSRAM
+// const uint32_t psram_bank_size = (uint32_t)(12800 / DATA_SIZE);
 const uint32_t psram_bank_size = (uint32_t)(510000 / DATA_SIZE);
 const uint32_t psram_packet_size = DATA_SIZE;
 byte psram_buffer_ready[psram_bank_size] = {0};
@@ -225,13 +228,13 @@ void rtc_clock(void *arguments);
 void initWifi(unsigned long timeout);
 void cek_wifi();
 void connect();
-void publishBuffer(uint32_t buffer_loc);
+byte publishBuffer(uint32_t buffer_loc);
 void log_to_sd(String data);
 String jsonify(uint32_t buffer_loc);
 String kalmanJSON(byte storage_PSRAM, uint32_t buff_loc);
 
 // Sensor and hardware control functions
-void cekSensor();
+byte cekSensor();
 void setAutorate(uint8_t data_rate);
 
 // Data processing and parsing functions

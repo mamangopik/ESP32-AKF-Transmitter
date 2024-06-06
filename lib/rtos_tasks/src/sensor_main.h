@@ -3,16 +3,16 @@ void sensorReader(void *pvParameters)
 {
     last_ts = 0;
     Serial2.begin(9600, SERIAL_8N1, RXD2, TXD2);
+    Serial.println("{\"INFO\":\"recall sensor\"}");
     sensor_wdg = millis();
     setAutorate(AKF_200_HZ);
     vTaskDelay(1000);
     for (;;)
     {
-        // Serial.println("loop sensor");
+        byte status_sensor;
         cekSensor();
         while (Serial2.available() > 0)
         {
-            cekSensor();
             byte in = Serial2.read();
             if (in == 104 && found == 0)
             {

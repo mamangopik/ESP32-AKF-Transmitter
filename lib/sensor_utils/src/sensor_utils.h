@@ -2,16 +2,17 @@
 #if !defined _sensor_utils_h_
 #define _sensor_utils_h_
 
-void cekSensor()
+byte cekSensor()
 {
   if (millis() - sensor_wdg > 5000)
   {
     Serial.println("{\"ERR\":\"sensor not responding, trying to recall\"}");
-    vTaskDelay(5000 / portTICK_PERIOD_MS);
-#ifdef SENSOR_WDG
-    ESP.restart();
-#endif
+    Serial.println("{\"INFO\":\"recall sensor\"}");
+    sensor_wdg = millis();
+    setAutorate(AKF_200_HZ);
+    vTaskDelay(1000);
   }
+  return 1;
 }
 void setAutorate(uint8_t data_rate)
 {
@@ -115,6 +116,7 @@ void processCommand()
   }
   if (data_count == DATA_SIZE)
   {
+
     buffer_ready[buffer_mon] = 1;
     buffer_mon++;
     if (id_data < 0xffffffff)

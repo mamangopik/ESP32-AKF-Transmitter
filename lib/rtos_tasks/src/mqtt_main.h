@@ -13,16 +13,21 @@ void mqttSender(void *arguments)
     // client.begin("broker.hivemq.com", net);
     while (1)
     {
+
         client.loop();
 
         if (!client.connected())
         {
             connect();
         }
-
+// for old board or psram is not used
 #if defined board_v1 || !defined USING_PSRAM
         for (uint32_t i = 0; i < BANK_SIZE; i++)
         {
+            if (packet_id >= 1024)
+            {
+                packet_id = 0;
+            }
             if (buffer_ready[i] == 1 && client.connected())
             {
                 publishBuffer(i);
@@ -30,52 +35,61 @@ void mqttSender(void *arguments)
                 vTaskDelay(1 / portTICK_PERIOD_MS);
             }
         }
+
 #endif
+// for new board and using psram
 #if defined USING_PSRAM && defined board_v2
-        // if psram not configured
+        // if psram error
         if (psram_ready != 1)
         {
             for (uint32_t i = 0; i < BANK_SIZE; i++)
             {
+                if (packet_id >= 1024)
+                {
+                    packet_id = 0;
+                }
                 if (buffer_ready[i] == 1 && client.connected())
                 {
-                    publishBuffer(i);
-                    buffer_ready[i] = 0;
-                    vTaskDelay(1 / portTICK_PERIOD_MS);
+                sending_no_psram:
+                    if (publishBuffer(i))
+                    {
+                        packet_id++;
+                        psram_buffer_ready[i] = 0;
+                        Serial.println("{\"SUCCESS\":\"message sent!\"}");
+                        vTaskDelay(1 / portTICK_PERIOD_MS);
+                    }
+                    else
+                    {
+                        Serial.println("{\"WARN\":\"Resending message\"}");
+                        connect();
+                        vTaskDelay(1 / portTICK_PERIOD_MS);
+                        goto sending_no_psram;
+                    }
                 }
             }
         }
-        else // if psram configured, then copy buffered sensor data to psram
+        // if psram OK
+        else
         {
-            for (uint32_t i = 0; i < BANK_SIZE; i++)
-            {
-                if (buffer_ready[i])
-                {
-                    // copying from DRAM to SPI RAM or PSRAM
-                    for (int j = 0; j < DATA_SIZE; j++)
-                    {
-                        write_x(psram_mon, j, x_values[i][j]);
-                        write_y(psram_mon, j, y_values[i][j]);
-                        write_z(psram_mon, j, z_values[i][j]);
-                    }
-                    // Serial.println("{\"INFO\":\"copy from buffer at " + String(i) + " to psram at " + String(psram_mon) + " \"}");
-                    psram_buffer_ready[psram_mon] = 1;
-                    psram_mon++;
-                    if (psram_mon == psram_bank_size)
-                    {
-                        psram_mon = 0;
-                    }
-                    buffer_ready[i] = 0;
-                }
-            }
-
-            for (uint32_t i = 0; i < psram_bank_size; i++) // sending stored sensor data stored on psram
+            for (uint32_t i = 0; i < psram_bank_size; i++) // sending stored sensor data that stored on psram
             {
                 if (psram_buffer_ready[i] == 1 && client.connected())
                 {
-                    publishBuffer(i);
-                    psram_buffer_ready[i] = 0;
-                    vTaskDelay(1 / portTICK_PERIOD_MS);
+                sending:
+                    if (publishBuffer(i))
+                    {
+                        packet_id++;
+                        psram_buffer_ready[i] = 0;
+                        Serial.println("{\"SUCCESS\":\"message sent!\"}");
+                        vTaskDelay(1 / portTICK_PERIOD_MS);
+                    }
+                    else
+                    {
+                        Serial.println("{\"WARN\":\"Resending message\"}");
+                        connect();
+                        vTaskDelay(1 / portTICK_PERIOD_MS);
+                        goto sending;
+                    }
                 }
             }
         }
