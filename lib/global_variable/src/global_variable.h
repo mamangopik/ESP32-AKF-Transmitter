@@ -110,7 +110,7 @@ uint8_t command[14];
 uint8_t header[4];
 uint8_t checksum[1];
 uint8_t led_status_mode = DISCONNECTED;
-uint8_t QoS = 2;
+uint8_t QoS = 1;
 uint8_t sd_attached = 0;
 uint8_t sd_configured = 0;
 uint8_t psram_ready = 0;

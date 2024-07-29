@@ -141,6 +141,7 @@ void rtc_clock(void *arguments)
                          JSONsecond.toInt()));
             set_rtc_flag = 0;
         };
+        Serial.println("RTC set");
         vTaskDelay(500 / portTICK_PERIOD_MS);
     }
 }

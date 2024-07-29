@@ -66,6 +66,14 @@ void mqttSender(void *arguments)
                         goto sending_no_psram;
                     }
                 }
+                if (buffer_ready[i] == 1 && !client.connected())
+                {
+                    Serial.println("{\"WARN\":\"Resending message\"}");
+                    String payload = jsonify(i);
+                    log_to_sd(payload);
+                    connect();
+                    vTaskDelay(1 / portTICK_PERIOD_MS);
+                }
             }
         }
         // if psram OK
@@ -85,11 +93,21 @@ void mqttSender(void *arguments)
                     }
                     else
                     {
+                        // String payload = jsonify(i);
+                        // log_to_sd(payload);
                         Serial.println("{\"WARN\":\"Resending message\"}");
+                        vTaskDelay(100 / portTICK_PERIOD_MS);
                         connect();
-                        vTaskDelay(1 / portTICK_PERIOD_MS);
                         goto sending;
                     }
+                }
+                if (psram_buffer_ready[i] == 1 && !client.connected())
+                {
+                    Serial.println("{\"WARN\":\"Resending message\"}");
+                    String payload = jsonify(i);
+                    log_to_sd(payload);
+                    connect();
+                    vTaskDelay(1 / portTICK_PERIOD_MS);
                 }
             }
         }

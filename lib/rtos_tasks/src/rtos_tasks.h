@@ -37,21 +37,21 @@ void init_RTOS()
         &BATTERY_TASK,
         CPU_1);
     vTaskDelay(1000 / portTICK_PERIOD_MS);
-    xTaskCreatePinnedToCore(
-        parameter_logger,
-        "testing parameter logger",
-        4096,
-        NULL,
-        PRIORITY_VERY_LOW,
-        &PARAM_LOGGER_TASK,
-        CPU_1);
-    vTaskDelay(1000 / portTICK_PERIOD_MS);
+    // xTaskCreatePinnedToCore(
+    //     parameter_logger,
+    //     "testing parameter logger",
+    //     4096,
+    //     NULL,
+    //     PRIORITY_VERY_LOW,
+    //     &PARAM_LOGGER_TASK,
+    //     CPU_1);
+    // vTaskDelay(1000 / portTICK_PERIOD_MS);
     xTaskCreatePinnedToCore(
         rtc_clock,
         "time reader from RTC",
         2048,
         NULL,
-        PRIORITY_LOW,
+        PRIORITY_VERY_HIGH,
         &RTC_TIME_TASK,
         CPU_1);
     vTaskDelay(1000 / portTICK_PERIOD_MS);
@@ -89,7 +89,7 @@ void init_RTOS()
         "data queue",
         8192,
         NULL,
-        PRIORITY_VERY_HIGH,
+        PRIORITY_REALTIME,
         &QUEUE_TASK,
         CPU_1);
     vTaskDelay(1000 / portTICK_PERIOD_MS);

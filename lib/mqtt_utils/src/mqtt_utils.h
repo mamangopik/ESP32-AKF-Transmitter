@@ -30,6 +30,7 @@ byte publishBuffer(uint32_t buffer_loc)
   }
   else
   {
+    log_to_sd(payload);
     return 0;
   }
 }

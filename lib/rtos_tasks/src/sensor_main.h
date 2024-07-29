@@ -5,7 +5,7 @@ void sensorReader(void *pvParameters)
     Serial2.begin(9600, SERIAL_8N1, RXD2, TXD2);
     Serial.println("{\"INFO\":\"recall sensor\"}");
     sensor_wdg = millis();
-    setAutorate(AKF_200_HZ);
+    setAutorate(AKF_50_HZ);
     vTaskDelay(1000);
     for (;;)
     {

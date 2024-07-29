@@ -9,7 +9,7 @@ byte cekSensor()
     Serial.println("{\"ERR\":\"sensor not responding, trying to recall\"}");
     Serial.println("{\"INFO\":\"recall sensor\"}");
     sensor_wdg = millis();
-    setAutorate(AKF_200_HZ);
+    setAutorate(AKF_50_HZ);
     vTaskDelay(1000);
   }
   return 1;

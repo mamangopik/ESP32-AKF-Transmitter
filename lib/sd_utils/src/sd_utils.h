@@ -10,6 +10,7 @@ void init_sd_card()
     }
     else
     {
+        Serial.println("SD Card Mount SUCCESS");
         sd_configured = 1;
     }
 
